@@ -48,7 +48,7 @@
     // Set the default template for this directive
     $templateCache.put(TEMPLATE_URL,
         '<div class="angucomplete-holder" ng-class="{\'angucomplete-dropdown-visible\': showDropdown}">' +
-        '  <input id="{{id}}_value" ng-model="searchStr" ng-disabled="disableInput" type="text" placeholder="{{placeholder}}" ng-focus="onFocusHandler()" class="{{inputClass}}" ng-focus="resetHideResults()" ng-blur="hideResults($event)" autocapitalize="off" autocorrect="off" autocomplete="off" ng-change="inputChangeHandler(searchStr)"/>' +
+        '  <input id="{{id}}_value" ng-model="searchStr" ng-disabled="disableInput" required="true" type="text" placeholder="{{placeholder}}" ng-focus="onFocusHandler()" class="{{inputClass}}" ng-focus="resetHideResults()" ng-blur="hideResults($event)" autocapitalize="off" autocorrect="off" autocomplete="off" ng-change="inputChangeHandler(searchStr)"/>' +
         '  <div id="{{id}}_dropdown" class="angucomplete-dropdown" ng-show="showDropdown">' +
         '    <div class="angucomplete-searching" ng-show="searching" ng-bind="textSearching"></div>' +
         '    <div class="angucomplete-searching" ng-show="!searching && (!results || results.length == 0)" ng-bind="textNoResults"></div>' +
@@ -97,7 +97,8 @@
         inputChanged: '=',
         autoMatch: '@',
         focusOut: '&',
-        focusIn: '&'
+        focusIn: '&',
+        data: '='
       },
       templateUrl: function(element, attrs) {
         return attrs.templateUrl || TEMPLATE_URL;
@@ -151,9 +152,12 @@
 
         function callOrAssign(value) {
           if (typeof scope.selectedObject === 'function') {
-            scope.selectedObject(value);
-          }
-          else {
+            if(scope.data){
+              scope.selectedObject(value, scope.data);
+            }else{
+              scope.selectedObject(value);
+            }
+          }else {
             scope.selectedObject = value;
           }
 
@@ -602,7 +606,7 @@
         };
 
         scope.inputChangeHandler = function(str) {
-          if (str.length < minlength) {
+          if (!str || str.length < minlength) {
             clearResults();
           }
           if (scope.inputChanged) {
