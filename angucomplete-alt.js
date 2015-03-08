@@ -49,7 +49,7 @@
     $templateCache.put(TEMPLATE_URL,
         '<div class="angucomplete-holder" ng-class="{\'angucomplete-dropdown-visible\': showDropdown}">' +
         '  <input id="{{id}}_value" ng-model="searchStr" ng-disabled="disableInput" required="true" type="text" placeholder="{{placeholder}}" ng-focus="onFocusHandler()" class="{{inputClass}}" ng-focus="resetHideResults()" ng-blur="hideResults($event)" autocapitalize="off" autocorrect="off" autocomplete="off" ng-change="inputChangeHandler(searchStr)"/>' +
-        '  <div id="{{id}}_dropdown" class="angucomplete-dropdown" ng-show="showDropdown">' +
+        '  <div id="{{id}}_dropdown" class="angucomplete-dropdown" ng-show="showDropdown && hasMore">' +
         '    <div class="angucomplete-searching" ng-show="searching" ng-bind="textSearching"></div>' +
         '    <div class="angucomplete-searching" ng-show="!searching && (!results || results.length == 0)" ng-bind="textNoResults"></div>' +
         '    <div class="angucomplete-row" ng-repeat="result in results" ng-click="selectResult(result)" ng-mouseenter="hoverRow($index)" ng-class="{\'angucomplete-selected-row\': $index == currentIndex}">' +
@@ -116,6 +116,7 @@
         var isScrollOn = false;
         var mousedownOn = null;
         var unbindInitialValue;
+        scope.hasMore = true;
 
         elem.on('mousedown', function(event) {
           mousedownOn = event.target.id;
@@ -392,12 +393,15 @@
                 handleOverrideSuggestions();
               }
             }
+          }else if( which === KEY_DEL || which === KEY_BS){
+            scope.hasMore = true;
           }
         }
 
         function httpSuccessCallbackGen(str) {
           return function(responseData, status, headers, config) {
             scope.searching = false;
+            scope.hasMore = responseData.has_more;
             processResults(
               extractValue(responseFormatter(responseData), scope.remoteUrlDataField),
               str);
@@ -432,6 +436,9 @@
           }
           if (!!scope.remoteUrlRequestWithCredentials) {
             params.withCredentials = true;
+          }
+          if(!scope.hasMore){
+            return;
           }
           cancelHttpRequest();
           httpCanceller = $q.defer();
